@@ -2,7 +2,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Camera, ShoppingCart, CheckCircle, Printer, Eye, User, ArrowLeft } from "lucide-react";
+import { Camera, ShoppingCart, CheckCircle, Printer, Eye, User, ArrowLeft, Receipt } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 // Add interface for Session type
 interface Session {
@@ -34,25 +35,24 @@ const Cart = () => {
   const total = subtotal + tax;
 
   const handleCompletePurchase = () => {
-    // Generate session tag
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const timeStr = now.toTimeString().slice(0, 5).replace(':', '');
-    const sessionTag = `SS-${dateStr}-${timeStr}`;
-
-    // Create new session
-    const newSession: Session = {
+    const currentDate = new Date();
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const timeStr = currentDate.toTimeString().split(' ')[0].substring(0, 5);
+    const sessionTag = `SS-${dateStr.replace(/-/g, '')}-${timeStr.replace(':', '')}`;
+    
+    // Create new session object
+    const newSession = {
       id: Date.now(),
       customer: customerName,
       location: selectedLocation,
       photos: allPhotos?.length || 0,
-      date: now.toISOString().slice(0, 10),
-      time: now.toLocaleTimeString().slice(0, 5),
+      date: dateStr,
+      time: timeStr,
       tag: sessionTag,
-      status: "Completed"
+      status: "Completed",
+      revenue: currentPackage.price
     };
-
-    // Get existing sessions from localStorage or initialize empty array
+    
     const existingSessions = JSON.parse(localStorage.getItem('recentSessions') || '[]');
     
     // Check if a session with the same tag already exists
@@ -65,8 +65,49 @@ const Cart = () => {
       localStorage.setItem('recentSessions', JSON.stringify(updatedSessions));
     }
 
-    alert(`Purchase completed! Session Tag: ${sessionTag}\nYour photos will be ready for pickup.`);
-    navigate("/photographer", { state: { newSession } });
+    // Create a custom alert dialog with styled session tag
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50';
+    alertDiv.innerHTML = `
+      <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="text-center mb-4">
+          <div class="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold mb-2">Purchase Completed!</h3>
+        </div>
+        <p class="mb-3 text-center">Your photos will be ready for pickup.</p>
+        <div class="text-center mb-6">
+          <p class="mb-2">Session Tag:</p> 
+          <span class="bg-green-500 text-white px-3 py-2 rounded font-medium text-lg">${sessionTag}</span>
+        </div>
+        <div class="text-sm text-gray-600 mb-6 text-center">Please save this tag to retrieve your photos later</div>
+        <div class="grid grid-cols-2 gap-4">
+          <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded" id="generate-invoice">
+            Generate Invoice
+          </button>
+          <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded" id="close-dialog">
+            Finish
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Add event listener to close button
+    alertDiv.querySelector('#close-dialog')?.addEventListener('click', () => {
+      document.body.removeChild(alertDiv);
+      navigate("/photographer", { state: { newSession } });
+    });
+
+    // Add event listener to generate invoice button
+    alertDiv.querySelector('#generate-invoice')?.addEventListener('click', () => {
+      generateInvoice();
+    });
   };
 
   const handleLogoClick = () => {
@@ -231,46 +272,456 @@ const Cart = () => {
   };
 
   const handlePreview = () => {
-    // Create a new window for preview
-    const previewWindow = window.open('', '_blank');
+    if (!allPhotos || allPhotos.length === 0) {
+      alert("No photos to preview");
+      return;
+    }
+
+    // Create a new window for preview with improved styling
+    const previewWindow = window.open('', '_blank', 'width=1000,height=800');
     if (previewWindow) {
       previewWindow.document.write(`
         <html>
           <head>
             <title>Photo Preview - ${customerName}</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .photo { margin: 10px; border: 1px solid #ccc; padding: 10px; display: inline-block; }
-              .photo img { max-width: 300px; max-height: 300px; }
-              .header { text-align: center; margin-bottom: 20px; }
+              body { 
+                font-family: system-ui, -apple-system, sans-serif; 
+                margin: 0; 
+                padding: 0;
+                background-color: #f8fafc;
+                color: #1e293b;
+              }
+              .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+              }
+              .header { 
+                text-align: center; 
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #e2e8f0;
+              }
+              .header h1 {
+                color: #3b82f6;
+                margin-bottom: 0.5rem;
+              }
+              .customer-info {
+                display: flex;
+                justify-content: space-between;
+                background-color: #f1f5f9;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                margin-bottom: 2rem;
+              }
+              .customer-info div {
+                display: flex;
+                flex-direction: column;
+              }
+              .customer-info span:first-child {
+                font-weight: 500;
+                color: #64748b;
+                font-size: 0.875rem;
+              }
+              .customer-info span:last-child {
+                font-weight: 600;
+                font-size: 1rem;
+              }
+              .gallery {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+              }
+              .photo-card {
+                background: white;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              }
+              .photo-card .photo-header {
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #e2e8f0;
+                font-weight: 500;
+              }
+              .photo-container {
+                height: 300px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1rem;
+              }
+              .photo-container img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+              }
+              .photo-footer {
+                padding: 0.75rem 1rem;
+                border-top: 1px solid #e2e8f0;
+                font-size: 0.875rem;
+                color: #64748b;
+              }
+              .print-button {
+                display: block;
+                margin: 2rem auto;
+                padding: 0.75rem 1.5rem;
+                background-color: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 0.375rem;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 1rem;
+              }
+              .print-button:hover {
+                background-color: #2563eb;
+              }
+              @media print {
+                .print-button {
+                  display: none;
+                }
+              }
             </style>
           </head>
           <body>
-            <div class="header">
-              <h1>SnapStation Photo Preview</h1>
-              <h2>Customer: ${customerName}</h2>
-              <h3>Location: ${selectedLocation}</h3>
-              <h3>Package: ${currentPackage.name}</h3>
-            </div>
-            ${allPhotos?.map((photo: any, index: number) => {
-              const photoStyle = getPhotoStyle(photo);
-              const styleString = `
-                filter: ${photoStyle.filter || 'none'};
-                transform: ${photoStyle.transform || 'none'};
-                border: ${photoStyle.border || 'none'};
-              `;
+            <div class="container">
+              <div class="header">
+                <h1>SnapStation Photo Preview</h1>
+                <p>These are the photos selected for your order</p>
+              </div>
               
-              return `
-                <div class="photo">
-                  <h4>Photo ${index + 1}</h4>
-                  <img src="${photo.url}" alt="Photo ${index + 1}" style="${styleString}" />
+              <div class="customer-info">
+                <div>
+                  <span>Customer</span>
+                  <span>${customerName}</span>
                 </div>
-              `;
-            }).join('') || ''}
+                <div>
+                  <span>Location</span>
+                  <span>${selectedLocation}</span>
+                </div>
+                <div>
+                  <span>Package</span>
+                  <span>${currentPackage.name}</span>
+                </div>
+                <div>
+                  <span>Photos</span>
+                  <span>${allPhotos.length}</span>
+                </div>
+              </div>
+              
+              <div class="gallery">
+                ${allPhotos.map((photo, index) => {
+                  const photoStyle = getPhotoStyle(photo);
+                  const styleString = `
+                    filter: ${photoStyle.filter || 'none'};
+                    transform: ${photoStyle.transform || 'none'};
+                    border: ${photoStyle.border || 'none'};
+                  `;
+                  
+                  return `
+                    <div class="photo-card">
+                      <div class="photo-header">Photo ${index + 1}</div>
+                      <div class="photo-container">
+                        <img src="${photo.url}" alt="Photo ${index + 1}" style="${styleString}" />
+                      </div>
+                      <div class="photo-footer">
+                        ${photo.editSettings?.selectedSize ? `Size: ${photo.editSettings.selectedSize}` : ''}
+                        ${photo.editSettings?.selectedFilter ? ` • Filter: ${photo.editSettings.selectedFilter}` : ''}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              
+              <button class="print-button" onclick="window.print()">Print Preview</button>
+            </div>
           </body>
         </html>
       `);
       previewWindow.document.close();
+    }
+  };
+
+  const generateInvoice = () => {
+    if (!allPhotos || allPhotos.length === 0) {
+      alert("No photos to include in invoice");
+      return;
+    }
+
+    const invoiceId = `INV-${Date.now().toString().slice(-6)}`;
+    const invoiceDate = new Date().toISOString().split('T')[0];
+    const invoiceWindow = window.open('', '_blank', 'width=1000,height=800');
+    
+    if (invoiceWindow) {
+      invoiceWindow.document.write(`
+        <html>
+          <head>
+            <title>Invoice #${invoiceId} - SnapStation</title>
+            <style>
+              body { 
+                font-family: system-ui, -apple-system, sans-serif; 
+                margin: 0; 
+                padding: 0;
+                background-color: #f8fafc;
+                color: #1e293b;
+              }
+              .invoice-container {
+                max-width: 800px;
+                margin: 2rem auto;
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                overflow: hidden;
+              }
+              .invoice-header {
+                padding: 2rem;
+                background-color: #3b82f6;
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .logo {
+                font-size: 1.5rem;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+              }
+              .invoice-info {
+                text-align: right;
+              }
+              .invoice-info h2 {
+                margin: 0;
+                font-size: 1.25rem;
+              }
+              .invoice-info p {
+                margin: 0.25rem 0 0 0;
+                opacity: 0.9;
+              }
+              .invoice-meta {
+                padding: 1.5rem 2rem;
+                border-bottom: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+              }
+              .customer-details, .invoice-details {
+                flex: 1;
+              }
+              .invoice-details {
+                text-align: right;
+              }
+              .meta-title {
+                font-weight: 600;
+                color: #64748b;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+              }
+              .meta-value {
+                font-weight: 500;
+                font-size: 1rem;
+              }
+              .invoice-items {
+                padding: 2rem;
+              }
+              .invoice-title {
+                font-size: 1.125rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                color: #1e293b;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              th {
+                text-align: left;
+                padding: 0.75rem;
+                font-weight: 500;
+                font-size: 0.875rem;
+                color: #64748b;
+                background-color: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+              }
+              td {
+                padding: 0.75rem;
+                border-bottom: 1px solid #e2e8f0;
+              }
+              .qty {
+                text-align: center;
+              }
+              .price, .total {
+                text-align: right;
+              }
+              .item-name {
+                font-weight: 500;
+              }
+              .item-description {
+                font-size: 0.875rem;
+                color: #64748b;
+              }
+              .invoice-summary {
+                margin-top: 2rem;
+                display: flex;
+                justify-content: flex-end;
+              }
+              .summary-table {
+                width: 300px;
+              }
+              .summary-table td {
+                padding: 0.5rem;
+                border: none;
+              }
+              .summary-table .summary-title {
+                font-weight: 500;
+              }
+              .summary-table .summary-value {
+                text-align: right;
+                font-weight: 500;
+              }
+              .summary-table .total-row {
+                font-weight: 600;
+                font-size: 1.125rem;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 0.75rem;
+              }
+              .invoice-footer {
+                padding: 2rem;
+                background-color: #f8fafc;
+                text-align: center;
+                font-size: 0.875rem;
+                color: #64748b;
+                border-top: 1px solid #e2e8f0;
+              }
+              .invoice-tag {
+                background-color: #10b981;
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.25rem;
+                font-weight: 500;
+                font-size: 0.875rem;
+              }
+              .print-btn {
+                display: block;
+                margin: 2rem auto;
+                padding: 0.75rem 1.5rem;
+                background-color: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 0.375rem;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 1rem;
+              }
+              .print-btn:hover {
+                background-color: #2563eb;
+              }
+              @media print {
+                body {
+                  background-color: white;
+                }
+                .invoice-container {
+                  box-shadow: none;
+                  margin: 0;
+                  max-width: none;
+                }
+                .print-btn {
+                  display: none;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="invoice-container">
+              <div class="invoice-header">
+                <div class="logo">
+                  <span>📸</span> SnapStation
+                </div>
+                <div class="invoice-info">
+                  <h2>INVOICE</h2>
+                  <p>#${invoiceId}</p>
+                </div>
+              </div>
+              
+              <div class="invoice-meta">
+                <div class="customer-details">
+                  <div class="meta-title">Bill To</div>
+                  <div class="meta-value">${customerName}</div>
+                  <div>Location: ${selectedLocation}</div>
+                  <div class="meta-title" style="margin-top: 1rem;">Session Tag</div>
+                  <div><span class="invoice-tag">SS-${invoiceDate.replace(/-/g, '')}-${new Date().getHours()}${new Date().getMinutes()}</span></div>
+                </div>
+                <div class="invoice-details">
+                  <div class="meta-title">Invoice Date</div>
+                  <div class="meta-value">${invoiceDate}</div>
+                  <div class="meta-title" style="margin-top: 1rem;">Status</div>
+                  <div class="meta-value" style="color: #10b981">Paid</div>
+                </div>
+              </div>
+              
+              <div class="invoice-items">
+                <div class="invoice-title">Invoice Items</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 50%">Item</th>
+                      <th class="qty">Qty</th>
+                      <th class="price">Price</th>
+                      <th class="total">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="item-name">${currentPackage.name}</div>
+                        <div class="item-description">Photo package with professional editing</div>
+                      </td>
+                      <td class="qty">1</td>
+                      <td class="price">₹${subtotal}</td>
+                      <td class="total">₹${subtotal}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="item-name">Photos</div>
+                        <div class="item-description">High-quality professional photos</div>
+                      </td>
+                      <td class="qty">${allPhotos.length}</td>
+                      <td class="price">Included</td>
+                      <td class="total">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+                <div class="invoice-summary">
+                  <table class="summary-table">
+                    <tr>
+                      <td class="summary-title">Subtotal</td>
+                      <td class="summary-value">₹${subtotal}</td>
+                    </tr>
+                    <tr>
+                      <td class="summary-title">GST (18%)</td>
+                      <td class="summary-value">₹${tax}</td>
+                    </tr>
+                    <tr class="total-row">
+                      <td class="summary-title">Total</td>
+                      <td class="summary-value">₹${total}</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+              
+              <div class="invoice-footer">
+                Thank you for visiting SnapStation! We hope you enjoy your photos.
+              </div>
+            </div>
+            
+            <button class="print-btn" onclick="window.print()">Print Invoice</button>
+          </body>
+        </html>
+      `);
+      invoiceWindow.document.close();
     }
   };
 
@@ -305,14 +756,11 @@ const Cart = () => {
 
       {/* Back Navigation */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate("/packages", { state: { customerName, selectedLocation } })}
-          className="text-gray-600"
-        >
-          ← Back to Packages
-        </Button>
+        <BackButton 
+          to="/packages" 
+          state={{ customerName, selectedLocation }}
+          label="Back to Packages" 
+        />
       </div>
 
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
@@ -469,6 +917,14 @@ const Cart = () => {
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Editor
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center"
+                    onClick={generateInvoice}
+                  >
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Generate Invoice
                   </Button>
                 </div>
               </CardContent>

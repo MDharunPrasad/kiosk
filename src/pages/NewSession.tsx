@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, User, MapPin } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 const NewSession = () => {
   const navigate = useNavigate();
@@ -62,6 +62,8 @@ const NewSession = () => {
           </div>
         </div>
       </header>
+
+      <BackButton to="/photographer" label="Back to Photographer Dashboard" />
 
       {/* Main Content */}
       <div className="text-center py-8 sm:py-16 px-4 sm:px-6">

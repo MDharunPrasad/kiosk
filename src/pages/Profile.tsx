@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, User, MapPin, Settings, History, Download, Eye, LogOut } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -129,14 +129,7 @@ const Profile = () => {
 
       {/* Back Navigation */}
       <div className="max-w-7xl mx-auto px-6 py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate(getBackRoute())}
-          className="text-gray-600"
-        >
-          ← Back to Dashboard
-        </Button>
+        <BackButton to={getBackRoute()} label={`Back to ${userRole === 'admin' ? 'Dashboard' : userRole === 'photographer' ? 'Photographer Dashboard' : 'Customer Portal'}`} />
       </div>
 
       <div className="max-w-7xl mx-auto p-6">

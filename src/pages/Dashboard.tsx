@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Camera, MapPin, Plus, Settings, Users, User, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BackButton from "@/components/ui/BackButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -110,14 +110,7 @@ const Dashboard = () => {
 
       {/* Back Navigation */}
       <div className="max-w-7xl mx-auto px-6 py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate("/")}
-          className="text-gray-600"
-        >
-          ← Back to Login
-        </Button>
+        <BackButton to="/" label="Back to Login" />
       </div>
 
       <div className="max-w-7xl mx-auto p-6">

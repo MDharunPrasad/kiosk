@@ -1,18 +1,46 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Search, Image, Edit, ShoppingCart } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 const Customer = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [savedSessions, setSavedSessions] = useState<any[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load sessions from localStorage
+    const sessions = JSON.parse(localStorage.getItem('recentSessions') || '[]');
+    setSavedSessions(sessions);
+  }, []);
+
+  useEffect(() => {
+    // Filter sessions based on search query
+    if (searchQuery.trim() === '') {
+      setFilteredSessions([]);
+    } else {
+      const filtered = savedSessions.filter(session => 
+        session.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        session.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        session.tag.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredSessions(filtered);
+    }
+  }, [searchQuery, savedSessions]);
 
   const handleStartSession = () => {
     navigate("/packages");
+  };
+
+  const handleViewSession = (session: any) => {
+    // You would typically load the session data here
+    alert(`Loading session: ${session.tag}`);
+    // Navigate to view the photos for this session
   };
 
   return (
@@ -33,6 +61,8 @@ const Customer = () => {
           </Button>
         </div>
       </header>
+
+      <BackButton to="/" label="Back to Login" />
 
       {/* Hero Section */}
       <div className="text-center py-16 px-6">
@@ -93,9 +123,32 @@ const Customer = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="text-center py-8 text-gray-500">
-                No sessions found
-              </div>
+              
+              {filteredSessions.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredSessions.map((session) => (
+                    <div key={session.id} className="p-3 border rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{session.customer}</p>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-600">{session.location}</span>
+                          <span className="text-xs text-gray-600">{session.date}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-green-500">{session.tag}</Badge>
+                        <Button size="sm" variant="outline" onClick={() => handleViewSession(session)}>
+                          View Photos
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  {searchQuery.trim() ? "No matching sessions found" : "Enter search terms to find your photos"}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

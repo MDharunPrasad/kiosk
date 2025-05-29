@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Camera, History, User, MapPin, Settings, Plus, Clock, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import BackButton from "@/components/ui/BackButton";
 
 interface Session {
   id: number;
@@ -133,14 +134,7 @@ const Photographer = () => {
 
       {/* Back Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate("/")}
-          className="text-gray-600"
-        >
-          ← Back to Login
-        </Button>
+        <BackButton to="/" label="Back to Login" />
       </div>
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:px-8">
@@ -303,7 +297,12 @@ const Photographer = () => {
                         </div>
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>Tag:</strong> {session.tag}</p>
+                        <p>
+                          <strong>Tag:</strong>{" "}
+                          <span className="bg-green-500 text-white px-2 py-0.5 rounded text-xs font-medium">
+                            {session.tag}
+                          </span>
+                        </p>
                         <p><strong>Date:</strong> {session.date}</p>
                         <p><strong>Time:</strong> {session.time}</p>
                         <p><strong>Photos:</strong> {session.photos} photos</p>
@@ -350,7 +349,12 @@ const Photographer = () => {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>Tag:</strong> {session.tag}</p>
+                    <p>
+                      <strong>Tag:</strong>{" "}
+                      <span className="bg-green-500 text-white px-2 py-0.5 rounded text-xs font-medium">
+                        {session.tag}
+                      </span>
+                    </p>
                     <p><strong>Date:</strong> {session.date}</p>
                     <p><strong>Time:</strong> {session.time}</p>
                     <p><strong>Photos:</strong> {session.photos} photos</p>

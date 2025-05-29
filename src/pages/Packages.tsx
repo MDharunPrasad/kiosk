@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Check, Star, Upload, Image, History, Edit, Trash2 } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 const Packages = () => {
   const navigate = useNavigate();
@@ -178,6 +179,12 @@ const Packages = () => {
         </div>
       </header>
 
+      <BackButton 
+        to="/new-session" 
+        state={{ customerName, selectedLocation }} 
+        label="Back to New Session" 
+      />
+
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -219,7 +226,7 @@ const Packages = () => {
         </div>
 
         {activeTab === "bundles" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-8">
             {packages.map((pkg) => {
               const IconComponent = pkg.icon;
               const isSelected = selectedPackage === pkg.id;
@@ -227,48 +234,48 @@ const Packages = () => {
               return (
                 <Card 
                   key={pkg.id} 
-                  className={`relative cursor-pointer transition-all hover:shadow-lg ${
-                    isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''
-                  } ${pkg.popular ? 'border-blue-500 shadow-md' : ''}`}
+                  className={`relative cursor-pointer transition-all hover:shadow-xl ${
+                    isSelected ? 'ring-3 ring-blue-500 shadow-xl' : ''
+                  } ${pkg.popular ? 'border-blue-500 shadow-lg' : ''}`}
                   onClick={() => setSelectedPackage(pkg.id)}
                 >
                   {pkg.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-blue-500 text-white px-4 py-1">
+                      <Badge className="bg-blue-500 text-white px-4 py-1 text-sm font-medium">
                         Most Popular
                       </Badge>
                     </div>
                   )}
 
-                  <CardHeader className="text-center pb-4">
-                    <div className={`mx-auto mb-4 w-12 h-12 bg-${pkg.color}-100 rounded-full flex items-center justify-center`}>
-                      <IconComponent className={`h-6 w-6 text-${pkg.color}-600`} />
+                  <CardHeader className="text-center pb-6 pt-8">
+                    <div className={`mx-auto mb-5 w-16 h-16 bg-${pkg.color}-100 rounded-full flex items-center justify-center`}>
+                      <IconComponent className={`h-8 w-8 text-${pkg.color}-600`} />
                     </div>
-                    <CardTitle className={`text-lg sm:text-xl text-${pkg.color}-600`}>
+                    <CardTitle className={`text-xl sm:text-2xl text-${pkg.color}-600 mb-2`}>
                       {pkg.name}
                     </CardTitle>
-                    <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
                       {pkg.price}
                     </div>
-                    <div className={`text-sm font-medium text-${pkg.color}-600`}>
+                    <div className={`text-sm font-medium text-${pkg.color}-600 mb-2`}>
                       {pkg.photos}
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-gray-600 mt-2">
                       {pkg.description}
                     </p>
                   </CardHeader>
 
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4 pb-6">
                     {pkg.features.map((feature, index) => (
-                      <div key={index} className="flex items-start space-x-2">
-                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-xs sm:text-sm text-gray-600">{feature}</span>
+                      <div key={index} className="flex items-start space-x-3">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
                       </div>
                     ))}
                     
-                    <div className="pt-4">
+                    <div className="pt-6">
                       <Button 
-                        className={`w-full ${
+                        className={`w-full py-6 text-lg ${
                           isSelected 
                             ? 'bg-green-600 hover:bg-green-700' 
                             : 'bg-blue-600 hover:bg-blue-700'
@@ -277,7 +284,7 @@ const Packages = () => {
                       >
                         {isSelected ? (
                           <>
-                            <Check className="h-4 w-4 mr-2" />
+                            <Check className="h-5 w-5 mr-2" />
                             Selected
                           </>
                         ) : (

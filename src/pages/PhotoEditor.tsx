@@ -1,10 +1,10 @@
-
 import { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Settings, Image, Square, Maximize, RotateCcw, RotateCw, Crop, Sun, Palette, Upload, ArrowLeft, ArrowRight } from "lucide-react";
+import BackButton from "@/components/ui/BackButton";
 
 const PhotoEditor = () => {
   const navigate = useNavigate();
@@ -160,14 +160,11 @@ const PhotoEditor = () => {
 
       {/* Back Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate("/packages", { state: { customerName, selectedLocation } })}
-          className="text-gray-600"
-        >
-          ← Back to Packages
-        </Button>
+        <BackButton 
+          to="/packages" 
+          state={{ customerName, selectedLocation }} 
+          label="Back to Photos" 
+        />
       </div>
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
